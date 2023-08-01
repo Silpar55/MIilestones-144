@@ -110,7 +110,7 @@ int inputIntRange(int lowerBound, int upperBound)
 
         if (value < lowerBound || value >  upperBound)
         {
-            printf("ERROR! Value must be between -3 and 11 inclusive: ");
+            printf("ERROR! Value must be between %d and %d inclusive: ", lowerBound, upperBound);
         }
 
     } while (value < lowerBound || value >  upperBound);

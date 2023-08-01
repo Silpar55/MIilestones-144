@@ -227,6 +227,7 @@ void inputCString(char* cStr, int minChar, int maxChar)
         {
             done = 0;
         }
+        
 
 
     } while (done);
