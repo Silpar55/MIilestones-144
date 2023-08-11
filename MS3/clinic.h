@@ -40,6 +40,12 @@ piece of work is entirely of my own creation.
 #define MAX_HOUR 14
 #define MIN_MINUTE 0
 #define MAX_MINUTE 30
+#define MAX_LENGTH 256
+
+// MAX-MIN HOURS & MIN
+#define MIN_INTERVAL 10
+#define MAX_INTERVAL 14
+#define HALF_HOUR 30
 
 //////////////////////////////////////
 // Structures
@@ -162,21 +168,21 @@ void removePatient(struct Patient patient[], int max);
 
 // View ALL scheduled appointments
 // Todo:
-void viewAllAppointments(struct ClinicData data);
+void viewAllAppointments(struct ClinicData *data);
 
 // View appointment schedule for the user input date
 // Todo:
-void viewAppointmentSchedule(struct ClinicData data);
+void viewAppointmentSchedule(struct ClinicData *data);
 
 // Add an appointment record to the appointment array
 // Todo:
-void addAppointment(struct Appointment appointments[], int maxAppointments,
-    struct Patient patients[], int maxPatient);
+void addAppointment(struct Appointment *appointments, int maxAppointments,
+    struct Patient *patients, int maxPatient);
 
 // Remove an appointment record from the appointment array
 // Todo:
-void removeAppointment(struct Appointment appointments[], int maxAppointments,
-    struct Patient patients[], int maxPatient);
+void removeAppointment(struct Appointment *appointments, int maxAppointments,
+    struct Patient *patients, int maxPatient);
 
 
 
@@ -194,8 +200,7 @@ void searchPatientByPhoneNumber(const struct Patient patient[], int max);
 int nextPatientNumber(const struct Patient patient[], int max);
 
 // Find the patient array index by patient number (returns -1 if not found)
-int findPatientIndexByPatientNum(int patientNumber,
-                                 const struct Patient patient[], int max);
+int findPatientIndexByPatientNum(int patientNumber,   const struct Patient patient[], int max);
 
 
 //////////////////////////////////////
@@ -220,6 +225,26 @@ int importPatients(const char* datafile, struct Patient patients[], int max);
 
 // Import appointment data from file into an Appointment array (returns # of records read)
 int importAppointments(const char* datafile, struct Appointment appoints[], int max);
+
+
+//////////////////////////////////////
+// MY FUNCTIONS
+//////////////////////////////////////
+
+// Sort the appointment by date
+void sortAppointments(struct Appointment appoints[], int max);
+
+// Display the format of date and fill what is required
+struct Date inputDate(void);
+
+// Display the format of time, with validation and fill what is required
+struct Time inputTime(void);
+
+// Get days format depending on the month
+int getDaysMonths(int year, int month);
+
+// Find appointment index by date and program requirement
+int findAppointmentIndexByDate(const struct Appointment* appointments, const struct Appointment* appointment, int maxAppointments, int isRemoveMode);
 
 
 #endif // !CLINIC_H

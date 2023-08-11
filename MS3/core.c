@@ -14,6 +14,7 @@ piece of work is entirely of my own creation.
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
+#include <string.h>
 
 #include "core.h"
 
@@ -117,39 +118,40 @@ int inputIntRange(int lowerBound, int upperBound)
 // -- Test 05 -- User input a character
 char inputCharOption(const char str[])
 {
-    char letter;
+    
+    char option[100];
     int i, validateChar = 0;
 
     do
     {
-        // get character
-        scanf(" %c", &letter);
+        // get character / characters
 
-        // Verify each possible option
-        for (i = 0; str[i] != '\0'; i++)
+        fgets(option, 100, stdin);
+        if (strlen(option) == 2)
         {
-
-            // if letter is equal to one of them means that the input is correct
-            if (letter == str[i])
+            // Verify each possible option
+            for (i = 0; str[i] != '\0' && validateChar == 0; i++)
             {
-                validateChar++;
+
+                // if letter is equal to one of them means that the input is correct
+                if (option[0] == str[i])
+                {
+                    validateChar++;
+                }
             }
         }
-
 
         // no char match with the letter ingresed
         if (validateChar == 0)
         {
-            printf("ERROR: Character must be one of [qwErty]: ");
+            printf("ERROR: Character must be one of [%s]: ", str);
         }
-
-
 
     } while (validateChar == 0);
 
-    clearInputBuffer();
+ 
 
-    return letter;
+    return option[0];
 }
 
 // -- TEST 06 & 07 & 08 -- User input a string in a range of length
@@ -201,7 +203,7 @@ void inputCString(char* cStr, int minChar, int maxChar)
         // check if is exactly
         if (minChar == maxChar && len != minChar)
         {
-            printf("ERROR: String length must be exactly %d chars: ", minChar);
+            printf("Invalid 10-digit number! Number: ");
             ch = 'x';
 
         }

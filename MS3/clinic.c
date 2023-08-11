@@ -20,6 +20,7 @@ piece of work is entirely of my own creation.
 #include "core.h"
 // include the user library "clinic" where the function prototypes are declared
 #include "clinic.h"
+#include <string.h>
 
 
 //////////////////////////////////////
@@ -343,7 +344,7 @@ void searchPatientData(const struct Patient patient[], int max)
 void addPatient(struct Patient patient[], int max)
 {
     int i;
-    int patients = 0;
+    int patients = 0, spaceAvailable = 0;
 
 
     for (i = 0; i < max; i++)
@@ -353,13 +354,20 @@ void addPatient(struct Patient patient[], int max)
         {
             patients++;
         }
+        else
+        {
+            if (spaceAvailable == 0)
+            {
+                spaceAvailable = i;
+            }
+        }
     }
 
     // Input patient if there is space
     if (max > patients)
     {
-        patient[patients].patientNumber = nextPatientNumber(patient, max);
-        inputPatient(&patient[patients]);
+        patient[spaceAvailable].patientNumber = nextPatientNumber(patient, max);
+        inputPatient(&patient[spaceAvailable]);
         printf("*** New patient record added ***\n\n");
     }
     else
@@ -410,7 +418,7 @@ void removePatient(struct Patient patient[], int max)
         displayPatientData(&patient[index], FMT_FORM);
         putchar('\n');
         printf("Are you sure you want to remove this patient record? (y/n): ");
-        decision = inputCharOption("ynYN");
+        decision = inputCharOption("yn");
 
         if (decision == 'y' || decision == 'Y')
         {
@@ -438,31 +446,184 @@ void removePatient(struct Patient patient[], int max)
 
 // View ALL scheduled appointments
 // Todo:
-void viewAllAppointments(struct ClinicData data)
-{
+void viewAllAppointments(struct ClinicData *data)
+{        
+    int i, patientAp;
 
+    // Display header
+    displayScheduleTableHeader(NULL, 1);
+
+    // Get every single appointment and show it respective patient
+    for ( i = 0; i < data->maxAppointments; i++)
+    {
+        if (data->appointments[i].patientNumber != 0)
+        {
+            patientAp = findPatientIndexByPatientNum(data->appointments[i].patientNumber, data->patients, data->maxPatient);
+
+            displayScheduleData(&data->patients[patientAp], &data->appointments[i], 1);
+        }
+    }
+    
+    printf("\n");
+   
 }
 
 // View appointment schedule for the user input date
 // Todo:
-void viewAppointmentSchedule(struct ClinicData data)
-{
+void viewAppointmentSchedule(struct ClinicData *data)
+{    
+    int i, patientAp;
+    struct Date date = { 0 };
 
+    date = inputDate();
+
+    displayScheduleTableHeader(&date, 0);
+
+    // Get every single appointment and show it respective patient
+
+    for (i = 0; i < data->maxAppointments; i++)
+    {
+        if (data->appointments[i].date.year == date.year && data->appointments[i].date.month == date.month && data->appointments[i].date.day == date.day)
+        {
+            patientAp = findPatientIndexByPatientNum(data->appointments[i].patientNumber, data->patients, data->maxPatient);
+
+            displayScheduleData(&data->patients[patientAp], &data->appointments[i], 0);
+        }
+    }
+
+    printf("\n");
 }
 
 // Add an appointment record to the appointment array
 // Todo:
-void addAppointment(struct Appointment appointments[], int maxAppointments,
-    struct Patient patients[], int maxPatient)
+void addAppointment(struct Appointment *appointments, int maxAppointments,
+    struct Patient *patients, int maxPatient)
 {
+    int patientIndex, isAvailable, i, added = 0;
+    struct Appointment appointment = { 0 };
+   
 
+    printf("Enter the patient number: ");
+    appointment.patientNumber = inputIntPositive();
+    patientIndex = findPatientIndexByPatientNum(appointment.patientNumber, patients, maxPatient);
+    putchar('\n');
+
+    if (patientIndex != -1)
+    {
+    
+        // Check if there is the timeslot is available
+        do
+        {
+            appointment.date = inputDate();
+
+            appointment.time = inputTime();
+
+            
+            // isAvailable = -1 Means that timeslot doesn't exist, therefore it can be added
+            isAvailable = findAppointmentIndexByDate(appointments, &appointment, maxAppointments, 0);
+
+
+            if (isAvailable != -1)
+            {
+                printf("ERROR: Appointment timeslot is not available!\n\n");
+            }
+            else
+            {
+                for ( i = 0; i < maxAppointments && added == 0; i++)
+                {
+                    if (appointments[i].patientNumber == 0)
+                    {
+                        appointments[i] = appointment;
+                        added = 1;
+                    }
+                    
+                }
+
+                sortAppointments(appointments, maxAppointments);
+                
+                printf("*** Appointment scheduled! ***\n\n");
+                
+            }
+
+        } while (added == 0 ); // Repeat until find an available timeslot
+     
+
+    }
+    else
+    {
+        printf("ERROR: Patient record not found!\n\n");
+    }
+ 
 }
 
 // Remove an appointment record from the appointment array
 // Todo:
-void removeAppointment(struct Appointment appointments[], int maxAppointments,
-    struct Patient patients[], int maxPatient)
+void removeAppointment(struct Appointment* appointments, int maxAppointments,
+    struct Patient* patients, int maxPatient)
 {
+    int patientIndex, isTimeslot, decision;
+    struct Appointment appointment = { 0 };
+
+
+    printf("Enter the patient number: ");
+    appointment.patientNumber = inputIntPositive();
+    patientIndex = findPatientIndexByPatientNum(appointment.patientNumber, patients, maxPatient);
+    putchar('\n');
+
+    if (patientIndex != -1)
+    {
+
+        // Check if the appointment exist
+        do
+        {
+            appointment.date = inputDate();
+            putchar('\n');
+
+
+            //Find the appointmentIndex by date
+
+            isTimeslot = findAppointmentIndexByDate(appointments, &appointment, maxAppointments, 1);
+            
+            // If timeslot is -1 means there is not timeslot, therefore cannot be removed
+
+            printf("%d", isTimeslot);
+            if (isTimeslot == -1)
+            {
+                
+                printf("ERROR: Appointment timeslot is not available!\n\n");
+            }
+            else
+            {
+
+
+                displayPatientData(&patients[patientIndex], FMT_FORM);
+                putchar('\n');
+                printf("Are you sure you want to remove this appointment record? (y,n): ");
+                decision = inputCharOption("yn");
+
+                if (decision == 'y' || decision == 'Y')
+                {
+                    // Because we cannot delete a struct what we can do is not display this appointment
+                    appointments[isTimeslot].patientNumber = 0;
+                    printf("Appointment record has been removed!\n\n");
+
+                }
+                else
+                {
+                    printf("Operation aborted.\n\n");
+                }
+                
+
+            }
+
+        } while (isTimeslot == -1); // reapeat until find a timeslot is found
+
+
+    }
+    else
+    {
+        printf("ERROR: Patient record not found!\n\n");
+    }
 
 }
 
@@ -656,32 +817,30 @@ void inputPhoneData(struct Phone* phone)
 /// ToDo:
 int importPatients(const char* datafile, struct Patient patients[], int max)
 {
-    int records = 0;
-    FILE* fp = fopen(datafile, "r");
-    
-    if (fp != NULL)
+    int i = 0;
+    FILE* file;
+
+    file = fopen(datafile, "r");
+
+    if (file != NULL)
     {
-        // reading line by line, max 256 bytes
-        const unsigned MAX_LENGTH = 256;
-        char buffer[MAX_LENGTH];
-
-        while (fgets(buffer, MAX_LENGTH, fp))
+        while (fscanf(file, "%d|%[^|]|%[^|]|%[^\n]", &patients[i].patientNumber, patients[i].name, patients[i].phone.description, patients[i].phone.number) != EOF)
         {
-            records++;
+            if (i < max)
+            {
+                i++;
+            }
         }
-      
-
-        // close the file
-        fclose(fp);
-
-        return records;
+            
+        fclose(file);
     }
     else
     {
-        printf("Error: could not open file %s", filename);
-        return records;
+        printf("ERROR: file cannot open");
     }
 
+
+    return i;
 }
 
 
@@ -689,5 +848,202 @@ int importPatients(const char* datafile, struct Patient patients[], int max)
 // ToDo:
 int importAppointments(const char* datafile, struct Appointment appoints[], int max)
 {
-    return 0;
+    int i = 0;
+    FILE* file;
+
+    file = fopen(datafile, "r");
+
+    if (file != NULL)
+    {
+        while (fscanf(file, "%d,%d,%d,%d,%d,%d", &appoints[i].patientNumber, &appoints[i].date.year, &appoints[i].date.month, &appoints[i].date.day, &appoints[i].time.hour, &appoints[i].time.min) != EOF)
+        {
+            if (i < max)
+            {
+                i++;
+            }
+        }
+
+
+        fclose(file);
+
+        sortAppointments(appoints, max);
+    }
+    else
+    {
+        printf("ERROR: file cannot open");
+    }
+
+
+    return i;
+}
+
+//////////////////////////////////////
+// MY FUNCTIONS
+//////////////////////////////////////
+
+// Sort the appointment by date
+void sortAppointments(struct Appointment appoints[], int max)
+{
+    int i = 0, j = 0, needSwap = 0;
+    struct Appointment appointTmp = { 0 };
+
+    // sort by year first
+    for ( i = 0; i < max; i++)
+    {
+        
+        for (j = 0; j < max; j++)
+        {
+            needSwap = 0;
+            if (appoints[i].date.year < appoints[j].date.year)
+                needSwap = 1;
+
+            if (appoints[i].date.year == appoints[j].date.year && appoints[i].date.month < appoints[j].date.month)
+                needSwap = 1;
+
+            if (appoints[i].date.year == appoints[j].date.year && appoints[i].date.month == appoints[j].date.month && appoints[i].date.day < appoints[j].date.day)
+                needSwap = 1;
+
+            if (appoints[i].date.year == appoints[j].date.year && appoints[i].date.month == appoints[j].date.month && appoints[i].date.day == appoints[j].date.day && appoints[i].time.hour < appoints[j].time.hour)
+                needSwap = 1;
+            
+            if (appoints[i].date.year == appoints[j].date.year && appoints[i].date.month == appoints[j].date.month && appoints[i].date.day == appoints[j].date.day && appoints[i].time.hour == appoints[j].time.hour && appoints[i].time.min < appoints[j].time.min)
+                needSwap = 1;
+
+            if(needSwap)
+            {
+                appointTmp = appoints[i];
+                appoints[i] = appoints[j];
+                appoints[j] = appointTmp;
+            }
+
+        }
+
+    }
+
+
+
+}
+
+// Display the format of date and fill what is required
+struct Date inputDate()
+{
+    struct Date date = { 0 };
+    int maxDays;
+
+    printf("Year        : ");
+    date.year = inputIntPositive();
+    printf("Month (1-12): ");
+    date.month = inputIntRange(1, 12);
+    maxDays = getDaysMonths(date.year, date.month);
+    printf("Day (1-%d)  : ", maxDays);
+    date.day = inputIntRange(1, maxDays);
+    
+    return date;
+}
+
+// Display the format of time, with validation and fill what is required
+struct Time inputTime()
+{
+    int isCorrect = 0;
+    struct Time time = { 0 };
+
+
+    do
+    {
+
+        printf("Hour (0-23)  : ");
+        time.hour = inputIntRange(0, 23);
+        printf("Minute (0-59): ");
+        time.min = inputIntRange(0, 59);
+        putchar('\n');
+
+
+
+
+
+        if ((time.hour >= MIN_INTERVAL && time.hour <= MAX_INTERVAL) && (time.min == 0 || time.min == HALF_HOUR) && !(time.hour == MAX_INTERVAL && time.min == HALF_HOUR))
+        {
+            isCorrect = 1;
+        }
+        else
+        {
+            isCorrect = 0;
+            printf("ERROR: Time must be between %d:00 and %d:00 in %d minute intervals.\n\n", MIN_INTERVAL, MAX_INTERVAL, HALF_HOUR);
+
+        }
+
+    } while (!isCorrect);
+    
+
+    return time;
+}
+
+// Get days format depending on the month
+int getDaysMonths(int year, int month)
+{
+    switch (month)
+    {
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 8:
+    case 10:
+    case 12:
+        return 31;
+        break;
+    case 4:
+    case 6:
+    case 9:
+    case 11:
+        return 30;
+        break;
+    case 2:
+        if (year % 4 == 0)
+        {
+            return 29;
+        }
+        else
+        {
+            return 28;
+        }
+    default:
+        return 0;
+        break;
+    }
+
+}
+
+
+// Find appointment index by date and program requirement
+int findAppointmentIndexByDate(const struct Appointment* appointments, const struct Appointment* appointment, int maxAppointments, int isRemoveMode)
+{
+    int i;
+
+    // check every single apppointment and find the appointment
+    for (i = 0; i < maxAppointments; i++)
+    {
+        if (isRemoveMode == 1)
+        {
+            // If isRemoveMode equal 1, means that this calling belongs to remove Appointment (because is not required time)
+            if (appointments[i].date.year == appointment->date.year && appointments[i].date.month == appointment->date.month && appointments[i].date.day == appointment->date.day && appointments[i].patientNumber == appointment->patientNumber)
+            {
+                return i;
+            }
+        }
+        else
+        {
+            // else it belongs to add appointment 
+            if (appointments[i].date.year == appointment->date.year && appointments[i].date.month == appointment->date.month && appointments[i].date.day == appointment->date.day && appointments[i].time.hour == appointment->time.hour && appointments[i].time.min == appointment->time.min)
+            {
+                return i;
+            }
+        }
+
+
+    }
+
+    // if doesnt found
+    return -1;
+
 }

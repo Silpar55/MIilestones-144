@@ -1,0 +1,48 @@
+/*/////////////////////////////////////////////////////////////////////////
+                        Reflection - Milestone 3
+Full Name  : Alejandro Silva Juarez
+Student ID#: 142655224
+Email      : asilva-juarez@myseneca.ca
+Section    : NFF
+
+Authenticity Declaration:
+I declare this submission is the result of my own work and has not been
+shared with any other student or 3rd party content provider. This submitted
+piece of work is entirely of my own creation.
+/////////////////////////////////////////////////////////////////////////*/
+
+1- This milestone requires me to create approximately 5 functions which are
+sortAppointment (return nothing)
+input date (return a struct with the type Date)
+input time (return a struct with the type Time)
+getDaysMonths (return an int which represents the days in the month selected before)
+findAppointmentIndexByDate(return a int which represents where is the appointment that the user wants to remove or find).
+
+The ones that are most useful to me were inputDate, inputTime and findAppointmentIndexByDate because allow me to not repeat myself when it comes to using the same format and purpose in different functions. 
+
+the inputDate has the following prototype:
+
+struct Date inputDate(void);
+
+What it does is similar to inputPatient in the last milestone, it contains the values that the user has to input to create the Date, however, I think this is most useful because it is used for 3 different functions which are addAppointment, removeAppoinment and viewAppointmentSchedule. each function has the purpose to get a Date type to do it a respective task, therefore, creating a function that contains the form helps the code to be more readable and follow the DRY (Don't Repeat Yourself) principles.
+
+Another useful function is the inputTime as well, its prototype is: 
+
+struct Time inputTime(void);
+
+Its purpose is similar to inputDate but returns a struct with the type Time, the special for its function is that calls another function called getDaysMonth which allows us to know the days that are in the month selected for the user before, those created functions are really helpful to not repeat the code, do not need to create an array of the month and its days and also to be able to use it in the future, maybe if one day the program needs to store the birthday of the pets (an example).
+
+lastly, a useful function that can be used for many purposes is findAppointmentIndexByDate, its prototype is:
+
+int findAppointmentIndexByDate(const struct Appointment* appointments, const struct Appointment* appointment, int maxAppointments, int isRemoveMode);
+
+This function allows us to find the index by Date input by the user, also, I include a parameter called isRemoveMode which indicates if we need that the user input the Time of the date or not, this parameter works as the macros FMT_FORM and FMT_TABLE, allowing us to be able to find the index with a flexible parameter (high cohesively and low coupling).  
+
+2- In my code I didn't use scanf in any part of the clinic.c because I always use the functions that I did in my core.c (I can input strings, char, and numbers with or without range), however, I used fscanf to import the patientData and appointmentData that are in the txt file. The reason why it is not used scanf is that the functions that I made in the core.c are validating the input before returning the value, this helps us to make sure that the value will be always as expected and we don't need to validate every input that the user has to. Also, in the case of the length of the phone number, because is the only input that requires an EXACT length in the code, we can change the error message in the core.c, this is possible because there are no other situations that the user needs to put an exactly input.
+
+
+3- The first function described in question 1 (inputDate). I decided to make it a function because I wanted to follow the logic of the past functions, also, I see that the format in the output appears in 3 different options on the menu so the only reason why I can put that input without writing the same code three times is creating a format that returns a struct Date.
+
+The second function (inputTime) follows the logic as the first one but with the only difference which is calling the function getDaysMonths(). This format is used in 2 different options on the menu but what I realize there is that every time that the month was different, the range of day changed so the validation do too, so what I did to fix it is doing a switch case depending on the month and if the month was February (2) then check if the year a leap year (year % 4 == 0)
+
+Finally, the last function follows the logic of the function findPatientIndexByPatientNumber, however, this function helps more because depending on how I can interpret the result I can add (if the index is -1) or check if there is an appointment (if the index is not -1), and depending on what I need, I can throw an error in results that in other options are the expected result.
